@@ -91,6 +91,8 @@ Class BackupObject
 		If Not fso.FolderExists(folderPath) Then
 			Set newFolder = fso.CreateFolder(folderPath) 
 		End If 	
+		
+		GetFolder = folderPath
 	End Function
 
 	'''check each folder in the backup source against the backup destination.
@@ -100,29 +102,23 @@ End Class
 
 'Create instance of backup object to set up backup environment
 Dim backObjInstance
-
-'catch any errors created by the construction of the object
-On Error Resume Next 
 Set backObjInstance = new BackupObject
+Dim source
+Dim destination
 
-'retrieve home directory from backup object, eg. C:\users\phelan
-WScript.Echo backObjInstance.desktopSource
-WScript.Echo backObjInstance.documentsSource
+'set source and destination folder variables
+source = backObjInstance.homeFolder
+destination = backObjInstance.destinationFolder
 
-'traverse desktop and perform backup
-TraverseFolder(backObjInstance.desktopSource)
-'traverse documents and perform backup
-TraverseFolder(backObjInstance.documentsSource)
+'call traverse folder
+TraverseFolder source, destination
 
-Sub TraverseFolder(sourceFolder)
-'takes in path of the source folder and destination(backup) folder.
+Function TraverseFolder(sourceFolder, destinationFolder)
+'function to traverse the entirety of the source folder
+'takes source and destination folder paths as arguments
+'WScript.Echo source & " | " & destination
+	
+	'traverse folder recursively
+	' ...
 
-
-End Sub
-
-'''
-'set fso = CreateObject("Scripting.FileSystemObject")
-'if fso.FolderExists("c:\windows") Then
-'	WScript.echo "There is a folder named c:\windows"
-'end If
-'''
+End Function
