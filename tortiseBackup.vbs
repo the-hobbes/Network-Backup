@@ -95,4 +95,36 @@ End Class
 
 'Create instance of backup object to set up backup environment
 Dim backObjInstance
+
+'catch any errors created by the construction of the object
+On Error Resume Next 
 Set backObjInstance = new BackupObject
+iErr = Err.Number
+WScript.Echo "Error Number: " & iErr
+
+'retrieve home directory from backup object
+Dim homeDirectory
+homeDirectory = backObjInstance.homeFolder
+
+'retrieve the desktop and the documents folders from the user home directory
+Dim desktopDirectory
+Dim documentsDirectory
+
+If backObjInstance.fso.FolderExists("C:\Users\" & homeDirectory & "\Desktop") Then
+	desktopDirectory = "C:\Users\" & homeDirectory & "\Desktop"
+Else
+	WScript.Echo "There is no desktop directory"
+End If
+
+If backObjInstance.fso.FolderExists("C:\Users\" & homeDirectory & "\Documents") Then
+	documentsDirectory = "C:\Users\" & homeDirectory & "\Documents"
+Else
+	WScript.Echo "There is no Documents directory"
+End If
+
+'''
+'set fso = CreateObject("Scripting.FileSystemObject")
+'if fso.FolderExists("c:\windows") Then
+'	WScript.echo "There is a folder named c:\windows"
+'end If
+'''
