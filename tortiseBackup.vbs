@@ -14,6 +14,8 @@ Class BackupObject
 	Public destinationFolder
 	Public fso
 	Public networkObject
+	Public desktopSource
+	Public documentsSource
 	
 	Private Sub Class_Initialize
   	'''default constructor for the Class
@@ -23,6 +25,9 @@ Class BackupObject
 		homeFolder = GetSource()
 		destinationDrive = GetTarget()
 		destinationFolder = GetFolder()	
+		desktopSource = homeFolder & "\Desktop"
+		documentsSource = homeFolder & "\Documents"
+		
 	End Sub
 
 	Function GetUser()
@@ -99,28 +104,21 @@ Dim backObjInstance
 'catch any errors created by the construction of the object
 On Error Resume Next 
 Set backObjInstance = new BackupObject
-iErr = Err.Number
-WScript.Echo "Error Number: " & iErr
 
-'retrieve home directory from backup object
-Dim homeDirectory
-homeDirectory = backObjInstance.homeFolder
+'retrieve home directory from backup object, eg. C:\users\phelan
+WScript.Echo backObjInstance.desktopSource
+WScript.Echo backObjInstance.documentsSource
 
-'retrieve the desktop and the documents folders from the user home directory
-Dim desktopDirectory
-Dim documentsDirectory
+'traverse desktop and perform backup
+TraverseFolder(backObjInstance.desktopSource)
+'traverse documents and perform backup
+TraverseFolder(backObjInstance.documentsSource)
 
-If backObjInstance.fso.FolderExists("C:\Users\" & homeDirectory & "\Desktop") Then
-	desktopDirectory = "C:\Users\" & homeDirectory & "\Desktop"
-Else
-	WScript.Echo "There is no desktop directory"
-End If
+Sub TraverseFolder(sourceFolder)
+'takes in path of the source folder and destination(backup) folder.
 
-If backObjInstance.fso.FolderExists("C:\Users\" & homeDirectory & "\Documents") Then
-	documentsDirectory = "C:\Users\" & homeDirectory & "\Documents"
-Else
-	WScript.Echo "There is no Documents directory"
-End If
+
+End Sub
 
 '''
 'set fso = CreateObject("Scripting.FileSystemObject")
