@@ -134,8 +134,7 @@ Function RootFolder(sourceFolder, destinationFolder)
 ' ********
 ' traverse the root of the source folder and copy newer (and those that don't exist at the destination) folders to destination folder
 ' ********
-	'WScript.Echo sourceFolder 
-	'WScript.Echo destinationFolder
+
 	Dim fileSys
 	Dim source
 	Dim destination
@@ -197,6 +196,29 @@ Function RootFolder(sourceFolder, destinationFolder)
 		End If
 	Next
 End Function
+
+Sub RecurseFolders(sPath, dPath, funcName)
+' ********
+' function to recursively iterate through all the folders and subfolders in a directory.
+' any desired function can be then run at each level in the recursion.
+' takes as arguments the source path, destination path, and the name of the function to be run.
+' ********
+	Dim folder
+	
+	'traverse subfolders and execute whatever function is passed into the RescurseFolders sub
+	 With fso.GetFolder(sPath)
+	   if .SubFolders.Count > 0 Then
+	     For each folder in .SubFolders
+	        ' Perform function's operation
+	        Execute funcName & " " & chr(34) & folder.Path & chr(34)
+	
+	        ' Recurse to check for further subfolders
+	        RecurseFolders folder.Path, funcName
+	     Next
+	   End If
+	 End With
+
+End Sub
 
 Function CopyFolders()
 End Function
