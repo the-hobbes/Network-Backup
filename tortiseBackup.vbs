@@ -48,7 +48,7 @@ Class BackupObject
 	'''Function used to check to see if the target location for the backup is available, and make it so if it is not.
 	'''Target is if the format: \\ipaddress\username, which is then mapped to the desired drive letter if it isn't already
 	''' Returns the local path to the mapped drive
-		Const TARGET_IP = "192.168.1.5"
+		Const TARGET_IP = "192.168.1.4"
 		Const TARGET_DRIVE_LETTER = "B"
 		
 		If IsDriveMapped(TARGET_DRIVE_LETTER) Then
@@ -114,11 +114,92 @@ destination = backObjInstance.destinationFolder
 TraverseFolder source, destination
 
 Function TraverseFolder(sourceFolder, destinationFolder)
-'function to traverse the entirety of the source folder
-'takes source and destination folder paths as arguments
-'WScript.Echo source & " | " & destination
+' ********
+' function to traverse the entirety of the source folder
+' takes source and destination folder paths as arguments
+' copies folders to destination when they do not exist at destination
+' ********
 	
-	'traverse folder recursively
+	'run through the root folder
+	RootFolder sourceFolder, destinationFolder
+	
+	'traverse subfolders recursively
 	' ...
+		'get a list of folders at this level
+		'if a folder doesn't exist, create/copy it. otherwise, ignore it
 
+End Function
+
+Function RootFolder(sourceFolder, destinationFolder)
+' ********
+' traverse the root of the source folder and copy newer (and those that don't exist at the destination) folders to destination folder
+' ********
+	'WScript.Echo sourceFolder 
+	'WScript.Echo destinationFolder
+	Dim fileSys
+	Dim source
+	Dim destination
+	Dim sourceDate
+	Dim destDate
+	Dim workingSource
+	Dim workingDest
+	
+	set fileSys = CreateObject("Scripting.FileSystemObject")
+	set source = fileSys.GetFolder(sourceFolder)
+	set destination = fileSys.GetFolder(destinationFolder)
+	
+	'get the length of the path for the root source folder and assign it to length
+	path = source.Path
+	Dim pathLength
+	pathLength = Len(path)
+	
+	'run through each subfolder in the root source
+	For Each subFolder In source.SubFolders
+		'get a string of path the subfolder, without the root preceeding it.
+		subPath = subFolder.path
+		subString = right(subPath, Len(subPath) - pathLength) & "\"
+		'WScript.Echo subString
+		
+		'set the working variable to hold the temporary source folder subFolder. Also set a temporary path for the destination to be checked for existance
+		Set workingSource = fileSys.GetFolder(subFolder)
+		tempDestPath = destination & subString
+		
+		'check to see if the folder exists at the destination
+		If fileSys.FolderExists(tempDestPath) Then
+			Set workingDest = fileSys.GetFolder(destination & subString)
+			'if it does exist at the destination, check the date modified. If it is newer than the source, dont copy. otherwise, copy
+			sourceDate = workingSource.DateLastModified
+			destDate = workingDest.DateLastModified
+			
+			If(destDate < sourceDate) Then
+				WScript.Echo "Source is newer. Source is copied to target destination"
+				filesys.CopyFolder workingSource & "\",workingDest &"\",True 
+			ElseIf(sourceDate < destDate)then
+				WScript.Echo "Destination is newer. No copying occurs"
+			end If
+		'otherwise, the folder doesn't exist at the destination and must be copied to there. 
+		Else
+			Dim newFolderPath
+			Dim newFolder
+			newFolderPath = destination & subString
+			
+			set newFolder = filesys.CreateFolder(newfolderpath)
+			'filesys.CopyFolder workingSource,newFolderPath,True
+			
+			Set objFiles = workingSource.Files
+			
+			If objFiles.Count <> 0 Then
+				On Error Resume Next
+				fileSys.CopyFile workingSource & "\" & "*.*", newFolderPath, True
+			End If
+			
+			WScript.Echo "Copied " & newFolder
+		End If
+	Next
+End Function
+
+Function CopyFolders()
+End Function
+
+Function CopyFiles()
 End Function
