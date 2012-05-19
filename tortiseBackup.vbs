@@ -105,6 +105,13 @@ Dim backObjInstance
 Set backObjInstance = new BackupObject
 Dim source
 Dim destination
+Dim fso
+Dim rootLength
+Dim wshshell
+'windows shell object to run xcopy	
+Set wshshell = WScript.CreateObject("Wscript.Shell")
+'file system object to work with the filesystem
+Set fso = CreateObject("Scripting.FileSystemObject")
 
 'set source and destination folder variables
 source = backObjInstance.homeFolder
@@ -119,14 +126,35 @@ Function TraverseFolder(sourceFolder, destinationFolder)
 ' takes source and destination folder paths as arguments
 ' copies folders to destination when they do not exist at destination
 ' ********
+	Dim subDest
+	Dim fullDest
+	
+	'get the length of the path for the root source folder and assign it to length
+	Dim pathLength
+	pathLength = Len(sourceFolder)
+	
+	'use the length of the root path to get the destination path
+	subDest = right(sourceFolder, Len(sourceFolder) - pathLength) & "\"
+	fullDest = destinationFolder & subDest
+	
+	sourceFolder = sourceFolder & "\"
+	destinationFolder = destinationFolder & "\"
+	WScript.Echo sourceFolder
+	WScript.Echo destinationFolder
+	
+	'On Error Resume Next
+	wshshell.run("cmd /c xcopy " & sourceFolder & "*.*" & " " & destinationFolder & " /d /s /e /q /h /r /o /x /y /c"),1,True	
+	'wscript.Echo Err.Description
 	
 	'run through the root folder
-	RootFolder sourceFolder, destinationFolder
+	'rootLength = RootFolder(sourceFolder, destinationFolder)
+	'WScript.Echo rootLength
 	
-	'traverse subfolders recursively
-	' ...
-		'get a list of folders at this level
-		'if a folder doesn't exist, create/copy it. otherwise, ignore it
+	'copy all latest folders
+	'RecurseFolders sourceFolder, destinationFolder, "CopyFolders"
+	
+	'copy all latest files
+	'RecurseFolders sourceFolder, destinationFolder, "CopyFiles"
 
 End Function
 
@@ -143,9 +171,9 @@ Function RootFolder(sourceFolder, destinationFolder)
 	Dim workingSource
 	Dim workingDest
 	
-	set fileSys = CreateObject("Scripting.FileSystemObject")
-	set source = fileSys.GetFolder(sourceFolder)
-	set destination = fileSys.GetFolder(destinationFolder)
+	Set fileSys = CreateObject("Scripting.FileSystemObject")
+	Set source = fileSys.GetFolder(sourceFolder)
+	Set destination = fileSys.GetFolder(destinationFolder)
 	
 	'get the length of the path for the root source folder and assign it to length
 	path = source.Path
@@ -171,10 +199,13 @@ Function RootFolder(sourceFolder, destinationFolder)
 			destDate = workingDest.DateLastModified
 			
 			If(destDate < sourceDate) Then
-				WScript.Echo "Source is newer. Source is copied to target destination"
+				WScript.Echo "Source (" & workingSource & ") is newer. Source is copied to target destination"
+				'WScript.echo workingSource & "\"
+				'WScript.Echo workingDest &"\"
+				On Error Resume next
 				filesys.CopyFolder workingSource & "\",workingDest &"\",True 
 			ElseIf(sourceDate < destDate)then
-				WScript.Echo "Destination is newer. No copying occurs"
+				WScript.Echo "Destination (" & workingDest & ") is newer. No copying occurs"
 			end If
 		'otherwise, the folder doesn't exist at the destination and must be copied to there. 
 		Else
@@ -195,6 +226,9 @@ Function RootFolder(sourceFolder, destinationFolder)
 			WScript.Echo "Copied " & newFolder
 		End If
 	Next
+	
+	RootFolder = pathLength
+	
 End Function
 
 Sub RecurseFolders(sPath, dPath, funcName)
@@ -204,23 +238,43 @@ Sub RecurseFolders(sPath, dPath, funcName)
 ' takes as arguments the source path, destination path, and the name of the function to be run.
 ' ********
 	Dim folder
+	'WScript.echo sPath
+	'WScript.Echo dPath
 	
 	'traverse subfolders and execute whatever function is passed into the RescurseFolders sub
 	 With fso.GetFolder(sPath)
-	   if .SubFolders.Count > 0 Then
+	 	On Error Resume Next
+	 	if .SubFolders.Count > 0 Then
 	     For each folder in .SubFolders
 	        ' Perform function's operation
-	        Execute funcName & " " & chr(34) & folder.Path & chr(34)
-	
+	        Execute funcName & " " & chr(34) & folder.Path & chr(34) & "," & chr(34) & dPath & chr(34)
 	        ' Recurse to check for further subfolders
-	        RecurseFolders folder.Path, funcName
+	        'here we need to change dPath to reflect the changed path corresponding to the destination.
+	        RecurseFolders folder.Path, dPath, funcName 
 	     Next
 	   End If
 	 End With
 
 End Sub
 
-Function CopyFolders()
+Function CopyFolders(folPath, destPath)
+	' ********
+	' Function used to copy folders to the destination. Called from the recurse folders function.
+	' ********
+	Dim subDest
+	Dim fullDest
+	
+	'need the length of the root path to get the destination path
+	subDest = right(folPath, Len(folPath) - rootLength) & "\"
+	fullDest = destPath & subDest
+	folPath = folPath & "\"
+	'WScript.Echo folPath & " | " & fullDest
+	
+	'wshshell.run("cmd /c xcopy c:\bla\*.* z:\bla\ /d /s /e /q /h /r /o /x /y /c"),1,True
+	On Error Resume Next
+	wshshell.run("cmd /c xcopy " & folPath & "*.*" & " " & fullDest & " /d /s /e /q /h /r /o /x /y /c"),1,True	
+	wscript.Echo Err.Description
+	
 End Function
 
 Function CopyFiles()
