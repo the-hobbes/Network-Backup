@@ -100,182 +100,61 @@ Class BackupObject
 
 End Class
 
-'Create instance of backup object to set up backup environment
-Dim backObjInstance
-Set backObjInstance = new BackupObject
-Dim source
-Dim destination
-Dim fso
-Dim rootLength
-Dim wshshell
-'windows shell object to run xcopy	
-Set wshshell = WScript.CreateObject("Wscript.Shell")
-'file system object to work with the filesystem
-Set fso = CreateObject("Scripting.FileSystemObject")
-
-'set source and destination folder variables
-source = backObjInstance.homeFolder
-destination = backObjInstance.destinationFolder
-
-'call traverse folder
-TraverseFolder source, destination
-
-Function TraverseFolder(sourceFolder, destinationFolder)
+Sub DoBackup
 ' ********
-' function to traverse the entirety of the source folder
-' takes source and destination folder paths as arguments
-' copies folders to destination when they do not exist at destination
+' Subroutine to perform the backup. Retrieves the source and destination from the backup object, then uses
+' xcopy to perform the necessary copying procedures.
+' xcopy usage is as follows:
+'	/c = continue copying if error occurs, 
+'	/e = copy directories and subdirectories, 
+'	/j = copy using unbuffered i/o, 
+'	/q = doesn't display filenames when copying, 
+'	/y = supresses overwrite confirmation, 
+'	/z = network restart mode, 
+'	/d = copies only those files whose source time is newer than the destination time
 ' ********
-	Dim subDest
-	Dim fullDest
+	'set debugging flag
+	Dim debug
+	debug = False
 	
-	'get the length of the path for the root source folder and assign it to length
-	Dim pathLength
-	pathLength = Len(sourceFolder)
+	'Create instance of backup object to set up backup environment
+	Dim backObjInstance
+	Set backObjInstance = new BackupObject
 	
-	'use the length of the root path to get the destination path
-	subDest = right(sourceFolder, Len(sourceFolder) - pathLength) & "\"
-	fullDest = destinationFolder & subDest
+	'shell object to run xcopy from command shell
+	Dim objShell 
+	Set objShell = WScript.CreateObject("Wscript.Shell")
+	'string to store results of copy execution
+	Dim strCommand 
+	'use of quotes character for proper command formatting
+	Dim chrQuotes
+	chrQuotes = Chr(34)
 	
-	sourceFolder = sourceFolder & "\"
-	destinationFolder = destinationFolder & "\"
-	WScript.Echo sourceFolder
-	WScript.Echo destinationFolder
+	'set source and destination folder variables, add a slash and the quotes through the use of chrQuotes
+	Dim strSource
+	Dim strDestination
+	strSource = chrQuotes & backObjInstance.homeFolder & "\*.*" & chrQuotes
+	strDestination = chrQuotes & backObjInstance.destinationFolder & "\" & chrQuotes
 	
-	'On Error Resume Next
-	wshshell.run("cmd /c xcopy " & sourceFolder & "*.*" & " " & destinationFolder & " /d /s /e /q /h /r /o /x /y /c"),1,True	
-	'wscript.Echo Err.Description
+	'run the command to copy and gather any results
+	strCommand = objShell.Run("Xcopy " & strSource & " " & strDestination & " /c /e /j /q /y /z /d", 0, True)
 	
-	'run through the root folder
-	'rootLength = RootFolder(sourceFolder, destinationFolder)
-	'WScript.Echo rootLength
-	
-	'copy all latest folders
-	'RecurseFolders sourceFolder, destinationFolder, "CopyFolders"
-	
-	'copy all latest files
-	'RecurseFolders sourceFolder, destinationFolder, "CopyFiles"
-
-End Function
-
-Function RootFolder(sourceFolder, destinationFolder)
-' ********
-' traverse the root of the source folder and copy newer (and those that don't exist at the destination) folders to destination folder
-' ********
-
-	Dim fileSys
-	Dim source
-	Dim destination
-	Dim sourceDate
-	Dim destDate
-	Dim workingSource
-	Dim workingDest
-	
-	Set fileSys = CreateObject("Scripting.FileSystemObject")
-	Set source = fileSys.GetFolder(sourceFolder)
-	Set destination = fileSys.GetFolder(destinationFolder)
-	
-	'get the length of the path for the root source folder and assign it to length
-	path = source.Path
-	Dim pathLength
-	pathLength = Len(path)
-	
-	'run through each subfolder in the root source
-	For Each subFolder In source.SubFolders
-		'get a string of path the subfolder, without the root preceeding it.
-		subPath = subFolder.path
-		subString = right(subPath, Len(subPath) - pathLength) & "\"
-		'WScript.Echo subString
+	' ******** 
+	' used for debugging purposes to print errors or successes
+	' ********
+	If debug = true Then
+		WScript.Echo strSource
+		WScript.Echo strDestination
 		
-		'set the working variable to hold the temporary source folder subFolder. Also set a temporary path for the destination to be checked for existance
-		Set workingSource = fileSys.GetFolder(subFolder)
-		tempDestPath = destination & subString
-		
-		'check to see if the folder exists at the destination
-		If fileSys.FolderExists(tempDestPath) Then
-			Set workingDest = fileSys.GetFolder(destination & subString)
-			'if it does exist at the destination, check the date modified. If it is newer than the source, dont copy. otherwise, copy
-			sourceDate = workingSource.DateLastModified
-			destDate = workingDest.DateLastModified
-			
-			If(destDate < sourceDate) Then
-				WScript.Echo "Source (" & workingSource & ") is newer. Source is copied to target destination"
-				'WScript.echo workingSource & "\"
-				'WScript.Echo workingDest &"\"
-				On Error Resume next
-				filesys.CopyFolder workingSource & "\",workingDest &"\",True 
-			ElseIf(sourceDate < destDate)then
-				WScript.Echo "Destination (" & workingDest & ") is newer. No copying occurs"
-			end If
-		'otherwise, the folder doesn't exist at the destination and must be copied to there. 
-		Else
-			Dim newFolderPath
-			Dim newFolder
-			newFolderPath = destination & subString
-			
-			set newFolder = filesys.CreateFolder(newfolderpath)
-			'filesys.CopyFolder workingSource,newFolderPath,True
-			
-			Set objFiles = workingSource.Files
-			
-			If objFiles.Count <> 0 Then
-				On Error Resume Next
-				fileSys.CopyFile workingSource & "\" & "*.*", newFolderPath, True
-			End If
-			
-			WScript.Echo "Copied " & newFolder
+		'depending on the results of the command after it has run, display errors or success
+		If strCommand <> 0 Then 
+			MsgBox "File Copy Error: " & strCommand 
+		Else 
+			MsgBox "Done Copying" 
 		End If
-	Next
+	End If
 	
-	RootFolder = pathLength
-	
-End Function
-
-Sub RecurseFolders(sPath, dPath, funcName)
-' ********
-' function to recursively iterate through all the folders and subfolders in a directory.
-' any desired function can be then run at each level in the recursion.
-' takes as arguments the source path, destination path, and the name of the function to be run.
-' ********
-	Dim folder
-	'WScript.echo sPath
-	'WScript.Echo dPath
-	
-	'traverse subfolders and execute whatever function is passed into the RescurseFolders sub
-	 With fso.GetFolder(sPath)
-	 	On Error Resume Next
-	 	if .SubFolders.Count > 0 Then
-	     For each folder in .SubFolders
-	        ' Perform function's operation
-	        Execute funcName & " " & chr(34) & folder.Path & chr(34) & "," & chr(34) & dPath & chr(34)
-	        ' Recurse to check for further subfolders
-	        'here we need to change dPath to reflect the changed path corresponding to the destination.
-	        RecurseFolders folder.Path, dPath, funcName 
-	     Next
-	   End If
-	 End With
-
 End Sub
 
-Function CopyFolders(folPath, destPath)
-	' ********
-	' Function used to copy folders to the destination. Called from the recurse folders function.
-	' ********
-	Dim subDest
-	Dim fullDest
-	
-	'need the length of the root path to get the destination path
-	subDest = right(folPath, Len(folPath) - rootLength) & "\"
-	fullDest = destPath & subDest
-	folPath = folPath & "\"
-	'WScript.Echo folPath & " | " & fullDest
-	
-	'wshshell.run("cmd /c xcopy c:\bla\*.* z:\bla\ /d /s /e /q /h /r /o /x /y /c"),1,True
-	On Error Resume Next
-	wshshell.run("cmd /c xcopy " & folPath & "*.*" & " " & fullDest & " /d /s /e /q /h /r /o /x /y /c"),1,True	
-	wscript.Echo Err.Description
-	
-End Function
-
-Function CopyFiles()
-End Function
+'kickoff script
+DoBackup
