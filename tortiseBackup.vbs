@@ -5,11 +5,13 @@
 ' ********
 
 Class BackupObject
-'''Class used to create a backup object containing all of the references necessary to perform a backup.
-'''Maps the destination drive if necessary and creates the backup folder in that drive if necessary
-'''Determines the source user folder as well
+' ********
+' Class used to create a backup object containing all of the references necessary to perform a backup.
+' Maps the destination drive if necessary and creates the backup folder in that drive if necessary
+' Determines the source user folder as well
+' ********
 
-	'''Global Properties declared here
+	'Global Properties declared here
 	Public userName
 	Public homeFolder
 	Public destinationDrive
@@ -20,7 +22,9 @@ Class BackupObject
 	'Public documentsSource
 	
 	Private Sub Class_Initialize
-  	'''default constructor for the Class
+  	' ********
+	' default constructor for the Class
+	' ********
 		set fso = CreateObject("Scripting.FileSystemObject")
 		Set networkObject = CreateObject("wscript.network")		
 		userName = GetUser()
@@ -33,24 +37,37 @@ Class BackupObject
 	End Sub
 
 	Function GetUser()
-	'''A function to retrieve and return the username of the current user who is logged in.
-	''' Returns the username of the current user
+	' ********
+	' A function to retrieve and return the username of the current user who is logged in.
+	' Returns the username of the current user
+	' ********	
 		GetUser = networkObject.userName
 	End Function 
 
 	Function GetSource()
-	''' A function to retrieve the home folder of the user who is logged in.
-	''' Returns the home folder
+	' ********
+	' A function to retrieve the home folder of the user who is logged in.
+	' Returns the home folder
+	' ********	
 		Set oShell = CreateObject("WScript.Shell")
 		strHomeFolder = oShell.ExpandEnvironmentStrings("%USERPROFILE%")
 		GetSource = strHomeFolder
 	End Function
 
 	Function GetTarget()
+<<<<<<< HEAD
 	'''Function used to check to see if the target location for the backup is available, and make it so if it is not.
 	'''Target is if the format: \\ipaddress\username, which is then mapped to the desired drive letter if it isn't already
 	''' Returns the local path to the mapped drive
 		Const TARGET_IP = "192.168.1.3"
+=======
+	' ********
+	' Function used to check to see if the target location for the backup is available, and make it so if it is not.
+	' Target is if the format: \\ipaddress\username, which is then mapped to the desired drive letter if it isn't already
+	' Returns the local path to the mapped drive
+	' ********
+		Const TARGET_IP = "192.168.1.4"
+>>>>>>> 2a397a22fdbab5039a16cddc65e877a0d46de3af
 		Const TARGET_DRIVE_LETTER = "B"
 		
 		If IsDriveMapped(TARGET_DRIVE_LETTER) Then
@@ -64,24 +81,28 @@ Class BackupObject
 	End Function
 	
 	function IsDriveMapped (byval drive)
-	'''Function used to check to see if the drive letter that is passed into it is mapped.
-	'''use only the letter, not :, and make sure it's uppercase
-	''' Returns false or 3 for drive mapped
-    	drive = ucase(left(drive,1))
+	' ********
+	' Function used to check to see if the drive letter that is passed into it is mapped.
+	' use only the letter, not :, and make sure it's uppercase
+	' Returns false or 3 for drive mapped
+	' ********
+    		drive = ucase(left(drive,1))
 
-    	' assume it's not mapped
-    	IsDriveMapped = False
+	    	' assume it's not mapped
+    		IsDriveMapped = False
 
-    	' if no such drive, return False right now
-    	if not fso.DriveExists(drive) then exit function
+    		' if no such drive, return False right now
+    		if not fso.DriveExists(drive) then exit function
 
-    	' get Drive object and check its type: 3 = mapped
-    	isDriveMapped = (fso.GetDrive(drive).driveType = 3)
+    		' get Drive object and check its type: 3 = mapped
+    		isDriveMapped = (fso.GetDrive(drive).driveType = 3)
 	end function
 
 	Function GetFolder()
-	'''Function used to check for the existance of the Backup folder in the mapped drive, and create it if it does not exist.
-	''' Returns the full path of the destination folder for the backup
+	' ********
+	' Function used to check for the existance of the Backup folder in the mapped drive, and create it if it does not exist.
+	' Returns the full path of the destination folder for the backup
+	' ********
 		Dim folder 
 		folder = "Backup_" & userName
 		
@@ -96,10 +117,6 @@ Class BackupObject
 		
 		GetFolder = folderPath
 	End Function
-
-	'''check each folder in the backup source against the backup destination.
-		'''if a file or folder is newer, than copy it to the destination
-
 End Class
 
 Sub DoBackup
