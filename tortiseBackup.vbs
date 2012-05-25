@@ -1,6 +1,8 @@
-'''tortiseBackup.vbs
-'''A script used to backup all of the items in a user's Documents and Desktop folder to a remote location, if the timestamp on the local
-'''location is newer than that of the network location.
+' ********
+' tortiseBackup.vbs
+' A script used to backup all of the items in a user's Documents and Desktop folder to a remote location, if the timestamp on the local
+' location is newer than that of the network location.
+' ********
 
 Class BackupObject
 '''Class used to create a backup object containing all of the references necessary to perform a backup.
@@ -14,8 +16,8 @@ Class BackupObject
 	Public destinationFolder
 	Public fso
 	Public networkObject
-	Public desktopSource
-	Public documentsSource
+	'Public desktopSource
+	'Public documentsSource
 	
 	Private Sub Class_Initialize
   	'''default constructor for the Class
@@ -25,8 +27,8 @@ Class BackupObject
 		homeFolder = GetSource()
 		destinationDrive = GetTarget()
 		destinationFolder = GetFolder()	
-		desktopSource = homeFolder & "\Desktop"
-		documentsSource = homeFolder & "\Documents"
+		'desktopSource = homeFolder & "\Desktop"
+		'documentsSource = homeFolder & "\Documents"
 		
 	End Sub
 
@@ -48,7 +50,7 @@ Class BackupObject
 	'''Function used to check to see if the target location for the backup is available, and make it so if it is not.
 	'''Target is if the format: \\ipaddress\username, which is then mapped to the desired drive letter if it isn't already
 	''' Returns the local path to the mapped drive
-		Const TARGET_IP = "192.168.1.4"
+		Const TARGET_IP = "192.168.1.3"
 		Const TARGET_DRIVE_LETTER = "B"
 		
 		If IsDriveMapped(TARGET_DRIVE_LETTER) Then
