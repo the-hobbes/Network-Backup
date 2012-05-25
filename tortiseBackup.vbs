@@ -55,19 +55,12 @@ Class BackupObject
 	End Function
 
 	Function GetTarget()
-<<<<<<< HEAD
-	'''Function used to check to see if the target location for the backup is available, and make it so if it is not.
-	'''Target is if the format: \\ipaddress\username, which is then mapped to the desired drive letter if it isn't already
-	''' Returns the local path to the mapped drive
-		Const TARGET_IP = "192.168.1.3"
-=======
 	' ********
 	' Function used to check to see if the target location for the backup is available, and make it so if it is not.
 	' Target is if the format: \\ipaddress\username, which is then mapped to the desired drive letter if it isn't already
 	' Returns the local path to the mapped drive
 	' ********
 		Const TARGET_IP = "192.168.1.4"
->>>>>>> 2a397a22fdbab5039a16cddc65e877a0d46de3af
 		Const TARGET_DRIVE_LETTER = "B"
 		
 		If IsDriveMapped(TARGET_DRIVE_LETTER) Then
